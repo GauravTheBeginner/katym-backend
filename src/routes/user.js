@@ -20,10 +20,10 @@ const SigninBody = zod.object({
     password: zod.string(),
 })
 
-const updatedBody = zod.object({
-    firstName: zod.string(),
-    lastName: zod.string(),
-    password: zod.string()
+const updateBody = zod.object({
+	password: zod.string().optional(),
+    firstName: zod.string().optional(),
+    lastName: zod.string().optional(),
 })
 
 router.post('/Signup', async (req, res) => {
@@ -61,7 +61,8 @@ router.post('/Signup', async (req, res) => {
 
     res.json({
         message: "User created successfully",
-        token: token
+        token: token,
+        userId: userId,
     })
 })
 
@@ -88,7 +89,8 @@ router.post('/Signin', async (req, res) => {
         }, JWT_SECRET);
 
         res.json({
-            token: token
+            token: token,
+            userId: user._id
         })
         return;
     }
@@ -99,23 +101,23 @@ router.post('/Signin', async (req, res) => {
     })
 })
 
-router.put("/update", authMiddleware, async (req, res) => {
-
-    const { body } = req.body;
-    const { success } = updatedBody.safeParse(body);
-
+router.put("/", authMiddleware, async (req, res) => {
+    const { success } = updateBody.safeParse(req.body)
     if (!success) {
         res.status(411).json({
             message: "Error while updating information"
         })
     }
-
-    await User.updateOne({ _id: req.userId }, req.body);
+    const userId =  req.userId;
+   await User.updateOne({
+        _id:userId
+    }, {
+        $set: req.body
+    })
 
     res.json({
         message: "Updated successfully"
     })
-
 })
 
 router.get('/bulk', async (req, res) => {
