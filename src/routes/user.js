@@ -101,24 +101,28 @@ router.post('/Signin', async (req, res) => {
     })
 })
 
-router.put("/", authMiddleware, async (req, res) => {
-    const { success } = updateBody.safeParse(req.body)
+router.put("/update", authMiddleware, async (req, res) => {
+    const { success } = updateBody.safeParse(req.body);
     if (!success) {
-        res.status(411).json({
+        return res.status(411).json({
             message: "Error while updating information"
-        })
+        });
     }
-    const userId =  req.userId;
-   await User.updateOne({
-        _id:userId
-    }, {
-        $set: req.body
-    })
+    try {
+        const userId = req.userId;
+        await User.updateOne({ _id: userId },  { $set: req.body } );
+        return res.json({
+            message: "Updated successfully",
+            userId: userId
+        });
+    } catch (error) {
+        console.error("Error updating user information:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
 
-    res.json({
-        message: "Updated successfully"
-    })
-})
 
 router.get('/bulk', async (req, res) => {
     const filter = req.query.filter || "";
